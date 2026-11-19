@@ -1,0 +1,33 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"                           # every async test runs automatically
+asyncio_default_fixture_loop_scope = "session"  # fixtures share one event loop
+asyncio_default_test_loop_scope = "session"     # and the tests run on that loop too
+testpaths = ["tests"]
+markers = ["slow: tests that take longer to run"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["migrations/versions"]  # Alembic writes these from its own template
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]  # errors, pyflakes, import order, bugbear, upgrades
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's Depends() in a parameter default is the framework's intended
+# style, not the mutable-default bug that rule B008 looks for.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Header",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Security",
+]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.mutmut]
+source_paths = ["app/"]
+pytest_add_cli_args_test_selection = ["tests/"]

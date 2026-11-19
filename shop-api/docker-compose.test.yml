@@ -1,0 +1,11 @@
+services:
+  test-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    ports:
+      - "5433:5432"      # your machine's port 5433 -> container's port 5432
+    tmpfs:
+      - /var/lib/postgresql/data   # keep data in RAM: faster, wiped on stop

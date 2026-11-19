@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://test:test@localhost:5433/test
+      TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5433/test
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Migration round-trip
+        run: |
+          alembic upgrade head
+          alembic downgrade -1
+          alembic upgrade head
+
+      - name: Lint, types and tests
+        run: bash scripts/check.sh
+
+  deploy:
+    needs: check                                   # only runs if "check" passed
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production                        # can require manual approval
+    steps:
+      - name: Trigger deployment on the hosting platform
+        run: curl -fsS -X POST "${{ secrets.DEPLOY_HOOK_URL }}"

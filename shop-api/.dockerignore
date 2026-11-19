@@ -1,0 +1,12 @@
+.git
+.venv
+.env
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+.tdd-phase
+.tdd-stop-attempts
+CLAUDE.local.md
+.claude/settings.local.json
+mutants

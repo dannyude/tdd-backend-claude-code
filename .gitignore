@@ -1,0 +1,23 @@
+# Python and tool caches
+__pycache__/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.schemathesis/
+mutants/
+
+# Local secrets and personal Claude Code files
+.env
+CLAUDE.local.md
+.claude/settings.local.json
+
+# TDD working files (see Part 4)
+.tdd-phase
+.tdd-stop-attempts
+
+# Output from validate.sh, if you point AUDIT_TMP_ROOT inside the repository
+book-acceptance-*/
+validation-run-*/
+book-versions-*.txt
