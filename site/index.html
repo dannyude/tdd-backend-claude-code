@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test-Driven Backend Development with Claude Code</title>
+<meta name="description" content="A book and its companion repository: build backend features with Claude Code so that Claude proves its own work with tests, from the first test to CI/CD.">
+<meta property="og:title" content="Test-Driven Backend Development with Claude Code">
+<meta property="og:description" content="From first test to CI/CD. Python · FastAPI · SQLAlchemy · PostgreSQL. 54 of 54 acceptance checks pass.">
+<meta property="og:image" content="assets/poster.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231B365D'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='%23FBFAF8' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:BookDisplay;src:url(fonts/display.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:BookMono;src:url(fonts/mono.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:BookMono;src:url(fonts/mono-bold.woff2) format('woff2');font-weight:700;font-display:swap}
+:root{
+  --paper:#FBFAF8;--paper-2:#F3F0EB;--rule:#E4E0D9;--ink:#1B365D;--copper:#B5532C;--slate:#5B6B82;--pass:#2E7D5B;
+  --t-bg:#14181F;--t-bg-2:#0E1116;--t-line:#262C36;--t-fg:#C9D1D9;--t-head:#FBFAF8;--t-dim:#7D8A9C;--t-pass:#3FB27F;--t-acc:#D4703C;
+  --disp:BookDisplay,Caladea,Cambria,Georgia,serif;
+  --mono:BookMono,'DejaVu Sans Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+::selection{background:#1B365D;color:var(--paper)}
+.wrap{max-width:1160px;margin:0 auto;padding:0 32px}
+.kicker{font:700 13px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--slate)}
+h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.025em;margin:0}
+h2{font-size:clamp(34px,4.4vw,52px);line-height:1.04}
+h3{font-size:24px;line-height:1.15}
+p{margin:0}
+.lede{font-size:19px;color:var(--slate);max-width:62ch}
+code,.mono{font-family:var(--mono);font-size:.88em}
+.rule{height:2px;background:var(--slate);transform-origin:0 0}
+section{padding:112px 0;border-top:1px solid var(--rule)}
+section .head{display:grid;gap:18px;margin-bottom:48px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* --- mask reveal: type rises into its own box (the reel's motion language) --- */
+.rise{display:block;overflow:hidden;padding-bottom:.08em}
+.rise>span{display:block;transform:translateY(105%);transition:transform 1s var(--ease)}
+.in .rise>span,.rise.in>span{transform:none}
+.in .rise:nth-child(2)>span{transition-delay:.1s}.in .rise:nth-child(3)>span{transition-delay:.2s}
+.in .rise:nth-child(4)>span{transition-delay:.3s}
+.wipe{transform:scaleX(0);transition:transform 1.1s var(--ease) .35s}.in .wipe{transform:scaleX(1)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.rise>span{transform:none}.wipe{transform:none}}
+
+/* --- nav --- */
+nav{position:sticky;top:0;z-index:20;background:rgba(251,250,248,.92);backdrop-filter:blur(8px);border-bottom:1px solid transparent;transition:border-color .2s}
+nav.scrolled{border-bottom-color:var(--rule)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:64px}
+.mark{font:700 19px/1 var(--disp);letter-spacing:-.02em;text-decoration:none;margin-right:auto;white-space:nowrap}
+.mark b{color:var(--copper)}
+nav .links{display:flex;gap:22px}
+nav .links a{font:13px var(--mono);text-decoration:none;color:var(--slate);letter-spacing:.02em}
+nav .links a:hover,nav .links a.on{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 14px/1 var(--mono);padding:14px 20px;border-radius:8px;border:1.5px solid var(--ink);text-decoration:none;cursor:pointer;background:none;color:var(--ink);transition:transform .15s,background .15s,color .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.btn.small{padding:9px 14px;font-size:12.5px}
+@media (max-width:860px){nav .links{display:none}}
+
+/* --- masthead --- */
+.mast{padding:88px 0 72px}
+.mast .grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:64px;align-items:end;margin-top:8px}
+.mast h1{font-size:clamp(44px,7.4vw,100px);line-height:.98;letter-spacing:-.035em;margin:22px 0 30px}
+.mast h1 .acc{color:var(--copper)}
+.chain{font:15px var(--mono);color:var(--slate);margin-top:22px}
+.chain b{font-weight:700}.chain .r{color:var(--copper)}.chain .g{color:var(--pass)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.clone{max-width:100%;min-width:0;display:flex;align-items:center;gap:0;border:1.5px solid var(--rule);border-radius:8px;overflow:hidden;font:13px var(--mono);background:#fff}
+.clone code{min-width:0;padding:13px 14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.clone button{border:0;border-left:1.5px solid var(--rule);background:var(--paper-2);padding:13px 14px;font:700 12px var(--mono);color:var(--ink);cursor:pointer;white-space:nowrap}
+.stat{display:grid;gap:6px;padding-bottom:8px}
+.stat .n{font:700 clamp(72px,8.4vw,120px)/.95 var(--disp);letter-spacing:-.04em;white-space:nowrap}
+.stat .n i{font-style:normal;color:var(--slate)}.stat .n em{font-style:normal;color:var(--copper)}
+.stat .k{color:var(--pass)}
+.stat p{font:14px var(--mono);color:var(--slate)}
+@media (max-width:900px){.mast .grid{grid-template-columns:minmax(0,1fr);gap:40px}}
+@media (max-width:600px){.sim .bar .sp{display:none}.wrap{padding:0 20px}section{padding:80px 0}.stepper .step{font-size:11px}}
+
+/* --- terminal surface --- */
+.term{background:var(--t-bg);color:var(--t-fg);border-radius:12px;font:14px/1.7 var(--mono);overflow:hidden}
+.term .bar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--t-line);font-size:12px;color:var(--t-dim);letter-spacing:.03em}
+.term .bar b{color:var(--t-head);font-weight:700}
+.term .bar .sp{margin-left:auto}
+.term pre{margin:0;padding:18px 20px;overflow:auto;font:inherit;white-space:pre}
+.t-dim{color:var(--t-dim)}.t-pass{color:var(--t-pass)}.t-acc{color:var(--t-acc)}.t-head{color:var(--t-head);font-weight:700}
+.t-fail{color:var(--t-acc)}
+.k-kw{color:#E7C49A}.k-str{color:#A9C7A0}.k-com{color:var(--t-dim);font-style:italic}.k-num{color:#E0A67A}.k-dec{color:var(--t-acc)}.k-fn{color:var(--t-head);font-weight:700}
+
+/* --- reel band --- */
+.reel{background:var(--t-bg);padding:72px 0;border:0}
+.reel .wrap{display:grid;gap:22px;max-width:1040px}
+.reel video{width:100%;border-radius:10px;display:block;background:var(--t-bg)}
+.reel .cap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font:13px var(--mono);color:var(--t-dim)}
+.reel .cap a{color:var(--t-head)}
+.reel .cap button{background:none;border:1px solid var(--t-line);color:var(--t-fg);font:12px var(--mono);border-radius:6px;padding:6px 10px;cursor:pointer}
+
+/* --- two doors --- */
+.doors{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.door{border:1.5px solid var(--rule);border-radius:14px;padding:26px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:inherit;display:grid;gap:14px;transition:border-color .2s,transform .2s}
+.door:hover{transform:translateY(-2px)}
+.door[aria-pressed=true]{border-color:var(--ink)}
+.door .num{font:700 12px var(--mono);letter-spacing:.16em;color:var(--slate)}
+.door h3{font-size:28px}
+.door.bad h3{color:var(--copper)}
+.diff{font:13.5px/1.75 var(--mono);background:var(--t-bg);color:var(--t-fg);border-radius:8px;padding:14px 16px;white-space:pre;overflow:auto}
+.diff .add{color:var(--t-pass)}.diff .del{color:var(--t-acc)}
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.verdict>div{border-radius:12px;padding:22px 24px;display:grid;gap:10px;align-content:start;min-height:150px}
+.verdict .plain{background:var(--paper-2)}
+.verdict .guard{background:var(--t-bg);color:var(--t-fg);font-family:var(--mono);font-size:14px}
+.verdict .lbl{font:700 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+.verdict .guard .lbl{color:var(--t-dim)}
+.verdict .big{font:700 26px/1.15 var(--disp)}
+.pullquote{font:700 clamp(26px,3vw,36px)/1.2 var(--disp);letter-spacing:-.02em;max-width:26ch;margin-top:64px;border-left:3px solid var(--copper);padding-left:24px}
+.pullquote small{display:block;font:13px var(--mono);color:var(--slate);letter-spacing:0;margin-top:14px}
+@media (max-width:820px){.doors,.verdict{grid-template-columns:1fr}}
+
+/* --- stage explorer --- */
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);position:relative;margin-bottom:36px}
+.stepper::before{content:"";position:absolute;left:12.5%;right:12.5%;top:15px;height:2px;background:var(--rule)}
+.stepper .fill{position:absolute;left:12.5%;top:15px;height:2px;background:var(--slate);transition:width .6s var(--ease)}
+.step{position:relative;background:none;border:0;cursor:pointer;display:grid;justify-items:center;gap:12px;font:700 13px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--slate);padding:0}
+.step .dot{width:32px;height:32px;border-radius:50%;background:var(--paper);border:2px solid var(--rule);display:grid;place-items:center;transition:all .3s var(--ease);z-index:1}
+.step .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:transparent;transition:background .3s}
+.step.done .dot{border-color:var(--slate)}.step.done .dot::after{background:var(--slate)}
+.step[aria-selected=true]{color:var(--c,var(--ink))}
+.step[aria-selected=true] .dot{border-color:var(--c,var(--ink));transform:scale(1.15)}
+.step[aria-selected=true] .dot::after{background:var(--c,var(--ink))}
+.step small{font:12px var(--mono);letter-spacing:0;text-transform:none;color:var(--slate)}
+.stage{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:28px;align-items:start}
+.stage .left{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+.stage>*,.sim>*,.proof>*,.qs>*,.mast .grid>*,.cmds>*,.qs li>*{min-width:0}
+.stage h3{font-size:40px}
+.phase-file{display:inline-flex;gap:10px;align-items:center;font:13px var(--mono);color:var(--slate)}
+.phase-file b{padding:4px 10px;border-radius:6px;background:var(--paper-2);color:var(--ink)}
+.phase-file b.red{background:#F6E5DD;color:var(--copper)}.phase-file b.green{background:#DDEEE5;color:var(--pass)}
+.cmds{display:grid;gap:8px}
+.cmd{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--t-bg);color:var(--t-fg);border-radius:8px;font:13px var(--mono);padding:10px 12px 10px 14px}
+.cmd span{overflow:auto;white-space:nowrap}
+.cmd span::before{content:"$ ";color:var(--t-acc)}
+.copy{background:none;border:1px solid var(--t-line);color:var(--t-dim);border-radius:5px;font:11px var(--mono);padding:4px 8px;cursor:pointer;flex:none}
+.copy:hover{color:var(--t-head)}
+.tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--t-line);overflow:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--t-dim);font:12.5px var(--mono);padding:12px 10px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--t-head);border-bottom-color:var(--t-acc)}
+.code{max-height:460px}
+.code pre{counter-reset:ln}
+.code .ln{display:block}
+.code .ln::before{counter-increment:ln;content:counter(ln);display:inline-block;width:2.4em;margin-right:1em;text-align:right;color:#3B4350}
+.out{border-top:1px solid var(--t-line)}.out pre{font-size:13px;max-height:260px}
+.out .line{display:block;transform:translateY(6px);opacity:0;animation:outIn .35s var(--ease) forwards}
+@keyframes outIn{to{transform:none;opacity:1}}
+.keys{font:12px var(--mono);color:var(--slate);margin-top:18px}
+.keys kbd{font:inherit;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:1px 6px;background:#fff}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.stepper .step small{display:none}}
+
+/* --- hook simulator --- */
+.sim{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px;align-items:stretch}
+.panel{border:1.5px solid var(--rule);border-radius:14px;background:#fff;padding:24px;display:grid;gap:24px;align-content:start}
+.panel .lbl{font:700 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin-bottom:10px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--paper-2);border-radius:8px;padding:3px}
+.seg button{border:0;background:none;font:700 13px var(--mono);padding:9px 0;border-radius:6px;cursor:pointer;color:var(--slate)}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(27,54,93,.15)}
+.seg button[data-v=red][aria-pressed=true]{color:var(--copper)}.seg button[data-v=green][aria-pressed=true]{color:var(--pass)}
+.seg.two{grid-template-columns:1fr 1fr}
+.act{display:grid;gap:8px}
+.act button{text-align:left;border:1.5px solid var(--rule);background:var(--paper);border-radius:8px;padding:12px 14px;font:13px/1.4 var(--mono);color:var(--ink);cursor:pointer;transition:border-color .15s,transform .15s}
+.act button:hover{border-color:var(--ink);transform:translateX(2px)}
+.act button small{display:block;color:var(--slate);font-size:11.5px}
+.pips{display:flex;gap:6px;align-items:center;font:12px var(--mono);color:var(--slate)}
+.pips i{width:22px;height:8px;border-radius:2px;background:var(--rule);transition:background .2s}
+.pips i.on{background:var(--copper)}
+.sim .term{display:grid;grid-template-rows:auto 1fr auto;min-height:520px}
+.log{padding:16px 20px;overflow:auto;max-height:560px;font-size:13.5px}
+.log .ev{padding:10px 0;border-bottom:1px dashed var(--t-line);animation:outIn .3s var(--ease)}
+.log .ev:last-child{border-bottom:0}
+.log .ev div{white-space:pre-wrap}
+.badge{display:inline-block;font:700 11px var(--mono);padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:1px}
+.badge.b0{background:#163828;color:var(--t-pass)}.badge.b2{background:#3A2015;color:var(--t-acc)}.badge.b1{background:#2A2F38;color:var(--t-fg)}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--t-line);padding:10px 16px;font-size:12px;color:var(--t-dim)}
+.foot button{background:none;border:1px solid var(--t-line);color:var(--t-fg);font:12px var(--mono);border-radius:6px;padding:5px 10px;cursor:pointer}
+details.src{margin-top:24px;border:1.5px solid var(--rule);border-radius:12px;background:#fff}
+details.src summary{cursor:pointer;padding:16px 20px;font:700 13px var(--mono);color:var(--ink);list-style:none}
+details.src summary::before{content:"▸ ";color:var(--copper)}
+details.src[open] summary::before{content:"▾ "}
+details.src .term{border-radius:0 0 12px 12px}
+@media (max-width:900px){.sim{grid-template-columns:minmax(0,1fr)}}
+
+/* --- proof grid --- */
+.proof{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:36px;align-items:start}
+.sections{display:grid;gap:10px}
+.sec{display:grid;grid-template-columns:250px 1fr;gap:14px;align-items:center}
+.sec .nm{font:12px var(--mono);color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cells{display:flex;flex-wrap:wrap;gap:6px}
+.cell{width:24px;height:24px;border-radius:4px;background:var(--rule);border:0;padding:0;cursor:pointer;transition:background .2s,transform .15s}
+.cell.ok{background:var(--pass)}
+.cell:hover,.cell:focus-visible{transform:scale(1.18);outline:2px solid var(--ink);outline-offset:1px}
+.proof .term{position:sticky;top:90px}
+.ticker{height:330px;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;justify-content:flex-end}
+.ticker div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hover-info{min-height:52px;font:13px var(--mono);color:var(--slate);margin-top:20px}
+.hover-info b{color:var(--ink)}
+.versions{font:13px/1.9 var(--mono);color:var(--slate);margin-top:28px}
+@media (max-width:900px){.proof{grid-template-columns:minmax(0,1fr)}.proof .term{position:static}.sec{grid-template-columns:1fr;gap:6px}}
+
+/* --- read --- */
+.paths{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px}
+.path{border:1.5px solid var(--rule);border-radius:14px;background:#fff;padding:22px;cursor:pointer;text-align:left;font:inherit;color:inherit;display:grid;gap:8px;align-content:start}
+.path[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.path b{font:700 21px/1.2 var(--disp)}
+.path span{font-size:14.5px;color:var(--slate)}
+.route{display:grid;gap:10px;margin:-28px 0 56px;counter-reset:r}
+.route a{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;text-decoration:none;padding:14px 18px;background:var(--paper-2);border-radius:10px;animation:outIn .35s var(--ease) both}
+.route a::before{counter-increment:r;content:counter(r);font:700 14px var(--mono);color:var(--copper)}
+.route a:hover{background:#ECE7DF}
+.route em{font:12.5px var(--mono);font-style:normal;color:var(--slate)}
+.toc{border-top:2px solid var(--ink)}
+.toc a{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:18px;align-items:baseline;padding:18px 4px;border-bottom:1px solid var(--rule);text-decoration:none;transition:background .15s,padding .2s var(--ease)}
+.toc a:hover{background:#fff;padding-left:14px}
+.toc .no{font:700 13px var(--mono);color:var(--slate)}
+.toc .t{font:700 22px/1.2 var(--disp)}
+.toc .w{display:block;font:14.5px/1.5 var(--sans);color:var(--slate);margin-top:4px}
+.toc .w code{color:var(--ink);overflow-wrap:anywhere}
+.toc .pg{font:700 14px var(--mono);color:var(--ink);white-space:nowrap}
+.toc .pg::before{content:"p. ";color:var(--slate);font-weight:400}
+@media (max-width:820px){.paths{grid-template-columns:1fr}}
+
+/* --- quick start --- */
+.qs{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:40px;align-items:start}
+.qs ol{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.qs li{display:grid;gap:6px}
+.qs li>span{font:13px var(--mono);color:var(--slate)}
+.req{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.req span{font:12.5px var(--mono);padding:6px 10px;border:1px solid var(--rule);border-radius:999px;background:#fff}
+@media (max-width:900px){.qs{grid-template-columns:minmax(0,1fr)}}
+
+footer{background:var(--t-bg);color:var(--t-fg);padding:72px 0 56px}
+footer .grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:40px}
+footer h3{color:var(--t-head);font-size:30px}
+footer p,footer li{font-size:14.5px;color:var(--t-dim)}
+footer ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+footer a{color:var(--t-fg)}
+footer .lbl{font:700 12px var(--mono);letter-spacing:.14em;color:var(--t-dim);text-transform:uppercase;margin-bottom:14px}
+@media (max-width:820px){footer .grid{grid-template-columns:1fr}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--paper);font:13px var(--mono);padding:10px 16px;border-radius:8px;transition:all .25s var(--ease);pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<nav id="nav"><div class="wrap">
+  <a class="mark" href="#top">TDD <b>×</b> Claude Code</a>
+  <div class="links">
+    <a href="#problem">The problem</a><a href="#loop">The loop</a><a href="#guardrails">Guardrails</a><a href="#proof">Proof</a><a href="#read">Read</a><a href="#start">Start</a>
+  </div>
+  <a class="btn small" href="https://github.com/dannyude/tdd-backend-claude-code">GitHub ↗</a>
+</div></nav>
+
+<header class="mast" id="top"><div class="wrap">
+  <div class="reveal">
+    <span class="rise"><span class="kicker">A book + its companion repository</span></span>
+    <h1><span class="rise"><span>Test-Driven Backend</span></span><span class="rise"><span>Development with <span class="acc">Claude Code</span></span></span></h1>
+    <div class="rule wipe"></div>
+  </div>
+  <div class="grid">
+    <div class="reveal">
+      <p class="chain">Spec → <b class="r">Red</b> → <b class="g">Green</b> → Refactor → Verify → Review</p>
+      <p class="lede" style="margin-top:18px">One complete, repeatable way to build backend features with Claude Code, so that Claude <em>proves</em> its own work with tests before anything is called done — carried all the way to CI/CD. Python · FastAPI · SQLAlchemy · PostgreSQL.</p>
+      <div class="cta">
+        <a class="btn solid" href="" data-pdf>Read the book (PDF) →</a>
+        <div class="clone"><code>git clone https://github.com/dannyude/tdd-backend-claude-code.git</code><button data-copy="git clone https://github.com/dannyude/tdd-backend-claude-code.git">Copy</button></div>
+      </div>
+    </div>
+    <div class="stat reveal">
+      <span class="rise"><span class="kicker k">All checks passed</span></span>
+      <span class="rise"><span class="n">54 <i>/</i> <em>54</em></span></span>
+      <span class="rise"><span><p>bash validate.sh --full<br>Python 3.12 and 3.14 · every listing checked</p></span></span>
+    </div>
+  </div>
+</div></header>
+
+<section class="reel" aria-label="The acceptance run, replayed"><div class="wrap">
+  <video id="reel" src="assets/hero.mp4" poster="assets/poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Replay of bash validate.sh --full ending on 54 of 54 checks passed"></video>
+  <div class="cap"><span>A replay of <span class="t-head">bash validate.sh --full</span> — real rows, in their real order, abridged to 26 seconds.</span><span><button id="reelToggle">Pause</button> &nbsp;<a href="assets/hero.mp4" download>Download MP4</a></span></div>
+</div></section>
+
+<!-- ============================================================ the problem -->
+<section id="problem"><div class="wrap">
+  <div class="head reveal">
+    <span class="rise"><span class="kicker">Part 1 · The big picture</span></span>
+    <h2><span class="rise"><span>There are two ways to make</span></span><span class="rise"><span>a failing test pass.</span></span></h2>
+    <p class="lede">You tell Claude: <em>“Make all the tests pass.”</em> The test below expects a <code>409</code> when someone cancels a shipped order. The app returns <code>200</code>. Pick a door.</p>
+  </div>
+  <div class="doors" role="group" aria-label="Two ways to make the test pass">
+    <button class="door" data-door="1" aria-pressed="false">
+      <span class="num">WAY 1</span><h3>Fix the application</h3>
+<div class="diff">  <span class="t-dim"># app/routers/orders.py</span>
+<span class="add">+ if order.status == "shipped":</span>
+<span class="add">+     raise HTTPException(status_code=409)</span></div>
+    </button>
+    <button class="door bad" data-door="2" aria-pressed="false">
+      <span class="num">WAY 2</span><h3>Change the test</h3>
+<div class="diff">  <span class="t-dim"># tests/api/test_order_cancel.py</span>
+<span class="del">- assert r.status_code == 409</span>
+<span class="add">+ assert r.status_code == 200</span></div>
+    </button>
+  </div>
+  <div class="verdict" id="verdict" hidden>
+    <div class="plain"><span class="lbl">pytest says</span><span class="big" id="vPlain"></span><span id="vPlainSub" style="color:var(--slate)"></span></div>
+    <div class="guard"><span class="lbl">With the book's lock hook · .tdd-phase = green</span><div id="vGuard"></div></div>
+  </div>
+  <p class="pullquote reveal">“Make the tests pass” has two solutions. This whole guide exists to close the second door.<small>— Figure 1.3, Part 1</small></p>
+</div></section>
+
+<!-- ============================================================ the loop -->
+<section id="loop"><div class="wrap">
+  <div class="head reveal">
+    <span class="rise"><span class="kicker">Part 5 · The feature loop</span></span>
+    <h2><span class="rise"><span>Watch one feature go</span></span><span class="rise"><span>Red → Green → Refactor.</span></span></h2>
+    <p class="lede">The feature is <strong>cancelling an order</strong>. Step through the real files from <a href="https://github.com/dannyude/tdd-backend-claude-code/tree/main/stages"><code>stages/</code></a> and the output each one actually produces.</p>
+  </div>
+  <div class="stepper" role="tablist" aria-label="Stages"><div class="fill" id="fill"></div></div>
+  <div class="stage" id="stage"></div>
+  <p class="keys">Tip: <kbd>←</kbd> <kbd>→</kbd> move between stages.</p>
+</div></section>
+
+<!-- ============================================================ guardrails -->
+<section id="guardrails"><div class="wrap">
+  <div class="head reveal">
+    <span class="rise"><span class="kicker">Part 4 · Guardrails</span></span>
+    <h2><span class="rise"><span>Try to get past the hooks.</span></span></h2>
+    <p class="lede">Two small Python scripts that Claude Code runs automatically. One locks the tests while Claude implements. The other won't let Claude finish while the checks fail — five times, then it hands over to a human. This simulator runs the same logic, with the same messages and exit codes.</p>
+  </div>
+  <div class="sim">
+    <div class="panel">
+      <div><div class="lbl">.tdd-phase</div><div class="seg" id="phase"><button data-v="">none</button><button data-v="red">red</button><button data-v="green" aria-pressed="true">green</button></div></div>
+      <div><div class="lbl">bash scripts/check.sh would…</div><div class="seg two" id="checks"><button data-v="pass">pass</button><button data-v="fail" aria-pressed="true">fail</button></div></div>
+      <div><div class="lbl">Claude tries to…</div><div class="act">
+        <button data-act="test">Edit a test<small>tests/api/test_order_cancel.py</small></button>
+        <button data-act="app">Edit the application<small>app/services/orders.py</small></button>
+        <button data-act="stop">Say it's done<small>triggers the Stop hook</small></button>
+      </div></div>
+      <div><div class="lbl">.tdd-stop-attempts</div><div class="pips" id="pips"></div></div>
+    </div>
+    <div class="term" aria-live="polite">
+      <div class="bar"><b>claude</b> · hook log<span class="sp">PreToolUse: lock_tests.py · Stop: verify_on_stop.py</span></div>
+      <div class="log" id="log"></div>
+      <div class="foot"><span>Exit 2 blocks and sends stderr back to Claude · exit 0 allows · exit 1 is non-blocking</span><button id="reset">Reset</button></div>
+    </div>
+  </div>
+  <details class="src"><summary>Read the real hooks (shop-api/.claude/hooks/)</summary>
+    <div class="term"><div class="tabs" id="hookTabs" role="tablist"></div><div class="code"><pre id="hookSrc"></pre></div></div>
+  </details>
+  <p class="keys" style="margin-top:22px">“A guardrail, not a jail”: the lock covers Claude's <code>Edit</code> and <code>Write</code> tools; Git is the second line of defence (Step 4.7).</p>
+</div></section>
+
+<!-- ============================================================ proof -->
+<section id="proof"><div class="wrap">
+  <div class="head reveal">
+    <span class="rise"><span class="kicker">Verify it yourself</span></span>
+    <h2><span class="rise"><span>54 checks. Every one of them</span></span><span class="rise"><span>runs the real tools.</span></span></h2>
+    <p class="lede"><code>validate.sh</code> rebuilds the project from a clean copy and runs the documented workflow end to end. Nothing is simulated. Each square below is one check, by its real name — hover or tab through them.</p>
+  </div>
+  <div class="proof">
+    <div>
+      <div class="sections" id="sections"></div>
+      <div class="hover-info" id="hoverInfo">Hover a square to see the check.</div>
+      <div class="versions">Python 3.12 &amp; 3.14 · Docker 29.9.3 · postgres:16 · FastAPI 0.165.0 · SQLAlchemy 2.1.9 · Pydantic 2.14.4 · pytest 9.2.0 · pytest-asyncio 1.5.0 · Ruff 0.17.5 · mypy 2.4.1 · Alembic 1.20.1 · Schemathesis 4.33.4 · mutmut 3.8.1</div>
+    </div>
+    <div class="term">
+      <div class="bar"><b>$ bash validate.sh --full</b><span class="sp"><button class="copy" id="rerun">▸ Run again</button></span></div>
+      <div class="ticker" id="ticker"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============================================================ read -->
+<section id="read"><div class="wrap">
+  <div class="head reveal">
+    <span class="rise"><span class="kicker">Read the book</span></span>
+    <h2><span class="rise"><span>Pick the path that fits you.</span></span></h2>
+  </div>
+  <div class="paths" id="paths"></div>
+  <div class="route" id="route"></div>
+  <div class="kicker" style="margin-bottom:16px">Contents · links open the PDF at that page</div>
+  <div class="toc" id="toc"></div>
+</div></section>
+
+<!-- ============================================================ start -->
+<section id="start"><div class="wrap qs">
+  <div class="reveal">
+    <span class="rise"><span class="kicker">Quick start</span></span>
+    <h2 style="margin-top:18px"><span class="rise"><span>Run the finished</span></span><span class="rise"><span>project in a minute.</span></span></h2>
+    <p class="lede" style="margin-top:20px">This runs the <em>finished</em> shop-api. To learn the workflow, build it yourself by following the book, and use the repository to check your work.</p>
+    <div class="req"><span>Linux or WSL</span><span>Python 3.12+</span><span>Docker</span><span>Git</span><span>Claude Code</span></div>
+    <div class="cta"><a class="btn" href="https://github.com/dannyude/tdd-backend-claude-code/blob/main/docs/GUIDE.md">How to use the book</a><a class="btn" href="https://github.com/dannyude/tdd-backend-claude-code/blob/main/docs/VERIFY.md">Verify it yourself</a></div>
+  </div>
+  <ol id="qs"></ol>
+</div></section>
+
+<footer><div class="wrap grid">
+  <div><h3>Test-Driven Backend Development with Claude Code</h3><p style="margin-top:14px">By Daniel Ude. The code is MIT-licensed; the book is © 2026 Daniel Ude, all rights reserved — read it and share the link, but please don't republish or sell it.</p></div>
+  <div><div class="lbl">In the repository</div><ul>
+    <li><a href="https://github.com/dannyude/tdd-backend-claude-code/tree/main/shop-api">shop-api/</a> — the finished project</li>
+    <li><a href="https://github.com/dannyude/tdd-backend-claude-code/tree/main/stages">stages/</a> — each step of the loop</li>
+    <li><a href="https://github.com/dannyude/tdd-backend-claude-code/blob/main/validate.sh">validate.sh</a> — the acceptance test</li>
+  </ul></div>
+  <div><div class="lbl">Questions &amp; corrections</div><ul>
+    <li><a href="mailto:danielude98@gmail.com">danielude98@gmail.com</a></li>
+    <li><a href="https://github.com/dannyude/tdd-backend-claude-code/issues">Open an issue</a> with the page number</li>
+  </ul></div>
+</div></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = (s, el=document) => el.querySelector(s), $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const h = (tag, attrs={}, html='') => { const e=document.createElement(tag); for (const [k,v] of Object.entries(attrs)) e.setAttribute(k,v); e.innerHTML=html; return e; };
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- small things ---------- */
+$$('[data-pdf]').forEach(a => a.href = D.pdf);
+const toast = msg => { const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1400); };
+document.addEventListener('click', e => { const b=e.target.closest('[data-copy]'); if(!b) return;
+  navigator.clipboard.writeText(b.dataset.copy).then(()=>toast('Copied: '+b.dataset.copy.slice(0,48)+(b.dataset.copy.length>48?'…':''))); });
+addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 8), {passive:true});
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), {threshold:.25});
+$$('.reveal').forEach(el => io.observe(el));
+const navIo = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) $$('nav .links a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#'+e.target.id)); }), {rootMargin:'-45% 0px -50% 0px'});
+$$('section[id]').forEach(s => navIo.observe(s));
+const reel = $('#reel');
+$('#reelToggle').onclick = e => { if (reel.paused) { reel.play(); e.target.textContent='Pause'; } else { reel.pause(); e.target.textContent='Play'; } };
+if (reduced) { reel.removeAttribute('autoplay'); reel.pause(); $('#reelToggle').textContent='Play'; }
+
+/* ---------- python highlighting (tiny, enough for these files) ---------- */
+function hl(src) {
+  const re = /(#[^\n]*)|([rbfRBF]{0,2}"""[\s\S]*?"""|[rbfRBF]{0,2}"(?:[^"\\\n]|\\.)*"|[rbfRBF]{0,2}'(?:[^'\\\n]|\\.)*')|(@[\w.]+)|\b(def|async|await|return|if|elif|else|not|and|or|is|in|from|import|as|raise|class|None|True|False|for|while|with|try|except|pass|lambda)\b|\b(\d+)\b/g;
+  let out='', last=0, m, fnNext=false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const [t] = m;
+    if (m[1]) out += `<span class="k-com">${esc(t)}</span>`;
+    else if (m[2]) out += `<span class="k-str">${esc(t)}</span>`;
+    else if (m[3]) out += `<span class="k-dec">${esc(t)}</span>`;
+    else if (m[4]) { out += `<span class="k-kw">${t}</span>`; if (t==='def'||t==='class') fnNext=true; continue; }
+    else if (m[5]) out += `<span class="k-num">${t}</span>`;
+  }
+  out += esc(src.slice(last));
+  out = out.replace(/(<span class="k-kw">(?:def|class)<\/span>\s+)(\w+)/g, '$1<span class="k-fn">$2</span>');
+  return out.split('\n').map(l => `<span class="ln">${l || ' '}</span>`).join('');
+}
+
+/* ---------- two doors ---------- */
+$$('.door').forEach(b => b.onclick = () => {
+  $$('.door').forEach(x => x.setAttribute('aria-pressed', x===b));
+  const v = $('#verdict'); v.hidden = false;
+  if (b.dataset.door === '1') {
+    $('#vPlain').innerHTML = '<span style="color:var(--pass)">1 passed.</span> And the system is right.';
+    $('#vPlainSub').textContent = 'The app now returns 409 for a shipped order — the behaviour the test asked for.';
+    $('#vGuard').innerHTML = `<div>● Claude: Edit(<span class="t-head">app/routers/orders.py</span>)</div><div class="t-pass">✓ allowed <span class="badge b0">exit 0</span></div><div class="t-dim">Application code is always editable.</div>`;
+  } else {
+    $('#vPlain').innerHTML = '<span style="color:var(--pass)">1 passed.</span> <span style="color:var(--copper)">But the system is still wrong.</span>';
+    $('#vPlainSub').textContent = 'The test passed only because Claude changed the definition of correct behaviour.';
+    $('#vGuard').innerHTML = `<div>● Claude: Edit(<span class="t-head">tests/api/test_order_cancel.py</span>)</div><div class="t-acc">✗ blocked <span class="badge b2">exit 2</span></div><div>Green phase: tests are locked. Fix the implementation. If the test itself is wrong, stop and explain why.</div>`;
+  }
+  v.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:350,easing:'ease-out'});
+});
+
+/* ---------- stage explorer ---------- */
+const COL = {stub:'var(--ink)', red:'var(--copper)', green:'var(--pass)', refactor:'var(--ink)'};
+let cur = 0, timers = [];
+const stepper = $('.stepper');
+D.stages.forEach((s, i) => {
+  const b = h('button', {class:'step', role:'tab', 'aria-selected':'false', style:`--c:${COL[s.id]}`}, `<span class="dot"></span>${s.label}<small>${s.where}</small>`);
+  b.onclick = () => show(i); stepper.append(b);
+});
+function show(i) {
+  cur = i; const s = D.stages[i];
+  $$('.step').forEach((b, j) => { b.setAttribute('aria-selected', j===i); b.classList.toggle('done', j<i); });
+  $('#fill').style.width = `${i / (D.stages.length-1) * 75}%`;
+  const ph = s.phase ? `<b class="${s.phase}">${s.phase}</b>` : '<b>(no marker)</b>';
+  $('#stage').innerHTML = `
+    <div class="left">
+      <h3 style="color:${COL[s.id]}">${s.label}</h3>
+      <p class="lede" style="font-size:17px">${s.lead}</p>
+      <div class="phase-file">.tdd-phase ${ph}</div>
+      <div class="cmds">${s.cmds.map(c => `<div class="cmd"><span>${esc(c)}</span><button class="copy" data-copy="${esc(c)}">copy</button></div>`).join('')}</div>
+    </div>
+    <div class="term">
+      <div class="tabs" role="tablist">${s.files.map((f, j) => `<button role="tab" data-f="${f}" aria-selected="${j===0}">${D.files[f].dest} <span class="t-dim">← stages/${f}</span></button>`).join('')}</div>
+      <div class="code" style="overflow:auto"><pre id="codeView"></pre></div>
+      <div class="out"><pre id="outView"></pre></div>
+    </div>`;
+  const view = f => { $('#codeView').innerHTML = hl(D.files[f].src.replace(/\n$/, '')); $$('#stage .tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.f===f)); };
+  $$('#stage .tabs button').forEach(b => b.onclick = () => view(b.dataset.f));
+  view(s.files[0]);
+  timers.forEach(clearTimeout); timers = [];
+  const out = $('#outView'); out.innerHTML = `<span class="t-dim">$ ${esc(s.cmds.at(-1))}</span>\n`;
+  s.out.forEach(([k, t], j) => timers.push(setTimeout(() => {
+    out.insertAdjacentHTML('beforeend', `<span class="line ${k==='pass'?'t-pass':k==='fail'?'t-fail':'t-dim'}">${esc(t)}</span>`);
+  }, reduced ? 0 : 250 + j * 140)));
+}
+show(0);
+addEventListener('keydown', e => {
+  const r = $('#loop').getBoundingClientRect(); if (r.top > innerHeight*.6 || r.bottom < innerHeight*.3) return;
+  if (e.key === 'ArrowRight' && cur < D.stages.length-1) show(cur+1);
+  if (e.key === 'ArrowLeft' && cur > 0) show(cur-1);
+});
+
+/* ---------- hook simulator: a faithful port of lock_tests.py and verify_on_stop.py ---------- */
+const S = {phase:'green', checks:'fail', counter:null}, MAX = 5;
+const seg = (id, key) => $$(`#${id} button`).forEach(b => b.onclick = () => { S[key] = b.dataset.v; $$(`#${id} button`).forEach(x => x.setAttribute('aria-pressed', x===b)); log(`<div class="t-dim">${key==='phase' ? (S.phase ? `$ echo ${S.phase} > .tdd-phase` : '$ rm -f .tdd-phase') : `(check.sh will now ${S.checks})`}</div>`); });
+seg('phase', 'phase'); seg('checks', 'checks');
+function pips() { $('#pips').innerHTML = Array.from({length:MAX}, (_, i) => `<i class="${S.counter && i < S.counter ? 'on' : ''}"></i>`).join('') + `<span style="margin-left:8px">${S.counter ?? 'no file'}</span>`; }
+function log(html) { const l=$('#log'); l.insertAdjacentHTML('beforeend', `<div class="ev">${html}</div>`); l.scrollTop = l.scrollHeight; pips(); }
+const badge = c => `<span class="badge b${c}">exit ${c}</span>`;
+function lockHook(path) {
+  const isTest = path.split('/').includes('tests');
+  if (S.phase === 'green' && isTest) return {code:2, err:'Green phase: tests are locked. Fix the implementation. If the test itself is wrong, stop and explain why.'};
+  return {code:0};
+}
+function stopHook() {
+  if (S.phase !== 'green') { S.counter = null; return {code:0, note: S.phase === 'red' ? 'Red phase: failing tests are expected. Claude may stop.' : 'No .tdd-phase marker: not doing TDD. Claude may stop.'}; }
+  if (S.checks === 'pass') { S.counter = null; return {code:0, ran:true, note:'All checks passed.'}; }
+  const attempts = S.counter ?? 0;
+  if (attempts >= MAX) { S.counter = null; return {code:1, ran:true, err:`Checks still failing after ${MAX} attempts. Stopping for a human to review.`}; }
+  S.counter = attempts + 1;
+  return {code:2, ran:true, err:`Not done — checks failing (attempt ${attempts+1} of ${MAX}):\nFAILED tests/api/test_order_cancel.py::test_owner_cancels_pending_order - Ass...\n1 failed in 0.06s`};
+}
+$$('[data-act]').forEach(b => b.onclick = () => {
+  const a = b.dataset.act;
+  if (a === 'stop') {
+    const r = stopHook();
+    let out = `<div>● Claude: <span class="t-head">"That's done."</span></div><div class="t-dim">Stop → .claude/hooks/verify_on_stop.py${r.ran ? ' → bash scripts/check.sh' : ''}</div>`;
+    if (r.code === 0) out += `<div class="t-pass">✓ stop allowed ${badge(0)}</div><div class="t-dim">${r.note}</div>`;
+    if (r.code === 2) out += `<div class="t-acc">✗ stop blocked ${badge(2)}</div><div>${esc(r.err)}</div><div class="t-dim">The failure output goes back to Claude, which keeps working.</div>`;
+    if (r.code === 1) out += `<div>● stop allowed ${badge(1)}</div><div>${esc(r.err)}</div><div class="t-dim">Counter removed. A human takes it from here.</div>`;
+    log(out);
+  } else {
+    const path = a === 'test' ? 'tests/api/test_order_cancel.py' : 'app/services/orders.py';
+    const r = lockHook(path);
+    let out = `<div>● Claude: Edit(<span class="t-head">${path}</span>)</div><div class="t-dim">PreToolUse → .claude/hooks/lock_tests.py</div>`;
+    out += r.code === 2 ? `<div class="t-acc">✗ blocked ${badge(2)}</div><div>${r.err}</div>` : `<div class="t-pass">✓ allowed ${badge(0)}</div>`;
+    log(out);
+  }
+});
+$('#reset').onclick = () => { S.counter = null; $('#log').innerHTML = ''; intro(); };
+function intro() { log(`<div class="t-dim"># The marker says <span class="t-head">${S.phase || 'nothing'}</span>; check.sh would <span class="t-head">${S.checks}</span>.\n# Try editing a test, then try to stop six times.</div>`); }
+intro();
+const hookFiles = {'lock_tests.py': D.hooks.lock, 'verify_on_stop.py': D.hooks.stop};
+Object.keys(hookFiles).forEach((f, i) => { const b = h('button', {role:'tab', 'aria-selected': i===0}, f); b.onclick = () => { $$('#hookTabs button').forEach(x => x.setAttribute('aria-selected', x===b)); $('#hookSrc').innerHTML = hl(hookFiles[f].replace(/\n$/, '')); }; $('#hookTabs').append(b); });
+$('#hookSrc').innerHTML = hl(D.hooks.lock.replace(/\n$/, ''));
+$('#hookSrc').parentElement.classList.add('code'); $('#hookSrc').parentElement.style.overflow = 'auto';
+
+/* ---------- the 54 ---------- */
+const groups = [];
+D.checks.forEach((c, i) => { let g = groups.at(-1); if (!g || g.section !== c.section) groups.push(g = {section:c.section, items:[]}); g.items.push({...c, i}); });
+groups.forEach(g => {
+  const row = h('div', {class:'sec'}, `<span class="nm" title="${esc(g.section)}">== ${esc(g.section)}</span><div class="cells"></div>`);
+  g.items.forEach(c => { const b = h('button', {class:'cell', 'data-i': c.i, 'aria-label': `PASS: ${c.name}`}); const show = () => $('#hoverInfo').innerHTML = `<span style="color:var(--pass)">[PASS]</span> <b>${esc(c.name)}</b><br>${esc(c.section)} · check ${c.i+1} of 54`; b.onmouseenter = show; b.onfocus = show; $('.cells', row).append(b); });
+  $('#sections').append(row);
+});
+let runT = [];
+function run() {
+  runT.forEach(clearTimeout); runT = [];
+  const cells = $$('.cell'), tk = $('#ticker'); cells.forEach(c => c.classList.remove('ok')); tk.innerHTML = '';
+  const add = html => { tk.insertAdjacentHTML('beforeend', `<div>${html}</div>`); while (tk.children.length > 14) tk.firstChild.remove(); };
+  let t = 0, last = '';
+  const step = reduced ? 0 : 75;
+  D.checks.forEach((c, i) => {
+    if (c.section !== last) { const s = c.section; runT.push(setTimeout(() => add(`<span class="t-head">== ${esc(s)}</span>`), t)); t += step * 1.5; last = s; }
+    runT.push(setTimeout(() => { cells[i].classList.add('ok'); add(`&nbsp;&nbsp;&nbsp;<span class="t-pass">[PASS]</span> ${esc(c.name)}`); }, t)); t += step;
+  });
+  runT.push(setTimeout(() => { add('&nbsp;'); add('<span class="t-head">== RESULT</span>'); add('54 checks: <span class="t-pass">54 PASS</span>, 0 FAIL, 0 PARTIAL, 0 BLOCKED'); add('<span class="t-pass" style="font-weight:700">ALL CHECKS PASSED - the documented workflow works end to end.</span>'); }, t + 200));
+}
+const pio = new IntersectionObserver(es => { if (es[0].isIntersecting) { run(); pio.disconnect(); } }, {threshold:.3});
+pio.observe($('#proof .proof')); $('#rerun').onclick = run;
+
+/* ---------- reading paths + contents ---------- */
+const P = Object.fromEntries(D.parts.map(p => [p.n, p]));
+const PATHS = [
+  {t:'New to TDD, or to Claude Code', s:'Read in order and build as you go. Part 3 takes about an hour the first time.',
+   r:[['1','The why, and the problem the book solves'],['2','Install the tools'],['3','Build the foundation'],['4','The guardrails'],['5','The feature loop'],['6','Subagents'],['7','The /tdd skill'],['8','CI/CD']]},
+  {t:'You already know TDD and pytest', s:'Skim Parts 1–2, then go straight to what everything else depends on.',
+   r:[['3','Steps 3.5–3.8: pytest config, transaction-isolated fixtures, check.sh'],['4','The hooks — the core idea of the book'],['5','The loop, including Phase 4’s extra verification'],['8','CI/CD, when you need it']]},
+  {t:'Just the guardrails, for your own project', s:'Take .claude/hooks/, .claude/settings.json and scripts/check.sh from shop-api/ and adapt check.sh.',
+   r:[['1','Section 1.2'],['4','Guardrails: the lock and the Stop hook']]},
+];
+PATHS.forEach((p, i) => { const b = h('button', {class:'path', 'aria-pressed': i===0}, `<b>${p.t}</b><span>${p.s}</span>`); b.onclick = () => route(i); $('#paths').append(b); });
+function route(i) {
+  $$('.path').forEach((b, j) => b.setAttribute('aria-pressed', i===j));
+  $('#route').innerHTML = PATHS[i].r.map(([n, w], j) => { const p = P[n]; return `<a href="${D.pdf}#page=${p.pdf}" target="_blank" rel="noopener" style="animation-delay:${j*50}ms"><span><b style="font-family:var(--disp);font-size:18px">Part ${n} · ${p.title}</b><br><span style="color:var(--slate);font-size:14.5px">${w}</span></span><em>p. ${p.page} →</em></a>`; }).join('');
+}
+route(0);
+$('#toc').innerHTML = D.parts.map(p => `<a href="${D.pdf}#page=${p.pdf}" target="_blank" rel="noopener"><span class="no">${p.n.length > 2 ? p.n : 'PART ' + p.n}</span><span><span class="t">${p.title}</span><span class="w">${esc(p.what)}${p.path ? ` <code>${p.path}</code>` : ''}</span></span><span class="pg">${p.page}</span></a>`).join('');
+
+/* ---------- quick start ---------- */
+const QS = [
+  ['Clone and enter the finished project', 'git clone https://github.com/dannyude/tdd-backend-claude-code.git && cd tdd-backend-claude-code/shop-api'],
+  ['Virtual environment and dependencies', 'python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt'],
+  ['PostgreSQL for the tests, on port 5433', 'docker compose -f docker-compose.test.yml up -d'],
+  ['The single definition of “done”', 'bash scripts/check.sh'],
+  ['Open Claude Code and run /hooks to see both guardrails', 'claude'],
+];
+$('#qs').innerHTML = QS.map(([w, c]) => `<li><span>${w}</span><div class="cmd"><span>${esc(c)}</span><button class="copy" data-copy="${esc(c)}">copy</button></div></li>`).join('') +
+  `<li><span>Expected</span><div class="term"><pre><span class="t-dim">==> ruff lint\n==> ruff format\n==> mypy\n==> pytest</span>\n<span class="t-pass">9 passed</span> <span class="t-dim">in 0.07s</span>\n<span class="t-pass" style="font-weight:700">All checks passed.</span></pre></div></li>`;
+</script>
+</body>
+</html>

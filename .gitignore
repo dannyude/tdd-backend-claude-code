@@ -21,3 +21,6 @@ CLAUDE.local.md
 book-acceptance-*/
 validation-run-*/
 book-versions-*.txt
+
+# companion site build output (python3 site/build.py)
+_site/
